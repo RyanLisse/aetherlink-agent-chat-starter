@@ -8,4 +8,5 @@ test("demo mode sends a deterministic draft", async ({ page }) => {
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.getByText('"ticket_id": "WL-1026"')).toBeVisible();
   await expect(page.getByText('"human_approval_required": true')).toBeVisible();
+  await page.screenshot({ path: "test-results/chat-demo-full.png", fullPage: true });
 });

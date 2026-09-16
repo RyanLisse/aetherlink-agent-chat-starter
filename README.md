@@ -28,9 +28,20 @@ npm run build
 npm start
 ```
 
-Open [http://127.0.0.1:8787](http://127.0.0.1:8787), select **Claude Code**, and send a request. The connector uses `tools: ["Agent"]` plus `allowedTools: ["Agent"]`, inline programmatic specialist definitions, no settings loading, `dontAsk` execution mode, and at most three turns so the coordinator can call `customer-reply` and `risk` once each. This deliberately avoids loading attendee project or user instruction files; edit the inline `agents` map in `server/index.mjs` when teaching a different bounded specialist. The specialist definitions have no tools and the prompt forbids customer or system actions. If local Claude authentication is unavailable, live mode remains open with an error.
+Open [http://127.0.0.1:8787](http://127.0.0.1:8787), select **Claude Code**, and send a request. The connector uses `tools: ["Agent"]` plus `allowedTools: ["Agent"]`, inline programmatic specialist definitions, no settings or MCP loading, `dontAsk` execution mode, at most three turns, and a `$1` SDK budget so the coordinator can call `customer-reply` and `risk` once each. This deliberately avoids loading attendee project or user instruction files; edit the inline `agents` map in `server/index.mjs` when teaching a different bounded specialist. The specialist definitions have no tools and the prompt forbids customer or system actions. If local Claude authentication is unavailable, live mode remains open with an error.
 
 The starter is intentionally loopback-only and accepts only the supplied synthetic `WL-1026` ticket. It does not persist messages or expose a public backend.
+
+## Adapt the bounded route
+
+To teach a different local scenario, change these exact seams together:
+
+- `server/guard.mjs`: replace `SYNTHETIC_TICKET` and update `validateChatRequest` / `validateDecision` for the new input and output contract.
+- `server/index.mjs`: update `promptFor` and the inline `agents` map. Keep `tools: ["Agent"]`, `allowedTools: ["Agent"]`, `settingSources: []`, and the specialist trace check unless the reviewed boundary changes.
+- `src/main.tsx`: replace the visible `ticket` object and source-context copy.
+- `tests/guard.test.mjs` and `e2e/chat.spec.ts`: change the contract assertions and visible smoke expectation.
+
+The two `.claude/agents/*.md` files are optional manual Claude Code references; live mode uses inline definitions so an attendee's project settings cannot expand the server boundary.
 
 ## Checks
 
