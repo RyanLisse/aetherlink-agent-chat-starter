@@ -22,7 +22,7 @@ export function validateChatRequest(value) {
   if (typeof value.message !== "string" || !value.message.trim()) throw new Error("message must be a non-empty string.");
   if (value.message.length > MAX_MESSAGE_CHARS) throw new Error(`message exceeds ${MAX_MESSAGE_CHARS} characters.`);
   const ticket = value.ticket;
-  if (!ticket || ticket.ticket_id !== SYNTHETIC_TICKET.ticket_id || ticket.customer !== SYNTHETIC_TICKET.customer || ticket.message !== SYNTHETIC_TICKET.message) {
+  if (!ticket || Object.keys(ticket).sort().join() !== "customer,message,ticket_id" || ticket.ticket_id !== SYNTHETIC_TICKET.ticket_id || ticket.customer !== SYNTHETIC_TICKET.customer || ticket.message !== SYNTHETIC_TICKET.message) {
     throw new Error("Only the supplied synthetic WL-1026 ticket is accepted.");
   }
   return { mode: value.mode, message: value.message.trim(), ticket };

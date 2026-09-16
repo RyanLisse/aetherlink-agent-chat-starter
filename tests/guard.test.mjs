@@ -12,6 +12,7 @@ test("accepts the bounded synthetic ticket and loopback origins", () => {
 
 test("rejects arbitrary tickets and oversized messages", () => {
   assert.throws(() => validateChatRequest({ mode: "demo", message: "x", ticket: { ...ticket, ticket_id: "REAL-1" } }));
+  assert.throws(() => validateChatRequest({ mode: "demo", message: "x", ticket: { ...ticket, private_note: "unexpected" } }));
   assert.throws(() => validateChatRequest({ mode: "live", message: "x".repeat(4001), ticket }));
 });
 

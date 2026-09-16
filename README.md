@@ -2,6 +2,13 @@
 
 This is a small desktop-first chat surface for the fictional support-triage workshop. It keeps the input ticket visible, makes the connector boundary explicit, and produces drafts that require human review.
 
+Requires Node.js 22 or newer.
+
+```sh
+git clone https://github.com/RyanLisse/aetherlink-agent-chat-starter.git
+cd aetherlink-agent-chat-starter
+```
+
 ## Run the deterministic demo
 
 ```sh
@@ -21,13 +28,14 @@ npm run build
 npm start
 ```
 
-Open [http://127.0.0.1:8787](http://127.0.0.1:8787), select **Claude Code**, and send a request. The connector uses `tools: ["Agent"]` plus `allowedTools: ["Agent"]`, inline specialist definitions, no settings loading, `dontAsk` execution mode, and at most three turns so the coordinator can call `customer-reply` and `risk` once each. The specialist definitions have no tools and the prompt forbids customer or system actions. If local Claude authentication is unavailable, live mode remains open with an error.
+Open [http://127.0.0.1:8787](http://127.0.0.1:8787), select **Claude Code**, and send a request. The connector uses `tools: ["Agent"]` plus `allowedTools: ["Agent"]`, inline programmatic specialist definitions, no settings loading, `dontAsk` execution mode, and at most three turns so the coordinator can call `customer-reply` and `risk` once each. This deliberately avoids loading attendee project or user instruction files; edit the inline `agents` map in `server/index.mjs` when teaching a different bounded specialist. The specialist definitions have no tools and the prompt forbids customer or system actions. If local Claude authentication is unavailable, live mode remains open with an error.
 
 The starter is intentionally loopback-only and accepts only the supplied synthetic `WL-1026` ticket. It does not persist messages or expose a public backend.
 
 ## Checks
 
 ```sh
+npm ci
 npm run build
 npm test
 npx playwright install chromium
@@ -40,4 +48,4 @@ CI runs these checks with two browser workers. The browser smoke test covers loa
 
 - [AI Elements chatbot example](https://elements.ai-sdk.dev/examples/chatbot) — the conversation and prompt-input interaction pattern that inspired this compact surface.
 - [Claude Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) — the `query()` runtime and tool/permission model used by live mode.
-- [Support-triage scenario](https://github.com/RyanLisse/tomorrow-agent-lab/tree/main/scenarios/support-triage) — the source contract and synthetic fixture used by the workshop.
+- [Support-triage scenario](https://github.com/RyanLisse/aetherlink-agent-lab/tree/main/scenarios/support-triage) — the source contract and synthetic fixture used by the workshop.
