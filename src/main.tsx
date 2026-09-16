@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./styles.css";
 
 type Mode = "demo" | "live";
-type Message = { id: number; role: "user" | "assistant"; text: string; mode?: Mode };
+type Message = { id: number; role: "user" | "assistant"; text: string; mode?: Mode; evidence?: { specialists: string[]; count: number; foreground: boolean } };
 
 const ticket = {
   ticket_id: "WL-1026",
@@ -39,9 +39,9 @@ function App() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ mode, message, ticket }),
       });
-      const payload = (await response.json()) as { text?: string; error?: string };
+      const payload = (await response.json()) as { text?: string; error?: string; evidence?: Message["evidence"] };
       if (!response.ok) throw new Error(payload.error || "The connector could not answer.");
-      setMessages((current) => [...current, { id: Date.now() + 1, role: "assistant", mode, text: payload.text || "No draft returned." }]);
+      setMessages((current) => [...current, { id: Date.now() + 1, role: "assistant", mode, evidence: payload.evidence, text: payload.text || "No draft returned." }]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The connector could not answer.");
     } finally {
@@ -74,7 +74,7 @@ function App() {
           <section className="conversation" aria-label="Support triage conversation">
             <div className="conversation-head"><div><p className="eyebrow">WORKSHOP THREAD</p><h2>Support triage · WL-1026</h2></div><span className="draft-pill">DRAFT ONLY</span></div>
             <div className="messages" aria-live="polite">
-              {messages.map((item) => <article className={`message ${item.role}`} key={item.id}><div className="avatar">{item.role === "assistant" ? "✦" : "M"}</div><div><span className="message-label">{item.role === "assistant" ? `Coordinator · ${item.mode === "live" ? "LOCAL" : "DEMO"}` : "You"}</span>{item.role === "assistant" && item.text.trim().startsWith("{") ? <pre className="result-json">{item.text}</pre> : <p>{item.text}</p>}</div></article>)}
+              {messages.map((item) => <article className={`message ${item.role}`} key={item.id}><div className="avatar">{item.role === "assistant" ? "✦" : "M"}</div><div><span className="message-label">{item.role === "assistant" ? `Coordinator · ${item.mode === "live" ? "LOCAL" : "DEMO"}` : "You"}</span>{item.role === "assistant" && item.text.trim().startsWith("{") ? <pre className="result-json">{item.text}</pre> : <p>{item.text}</p>}{item.mode === "live" && item.evidence && <small className="live-evidence">Contract checked · {item.evidence.specialists.join(" → ")} · foreground · human review pending</small>}</div></article>)}
               {busy && <article className="message assistant"><div className="avatar">✦</div><div><span className="message-label">Coordinator</span><p className="thinking">Reading the bounded brief <span>···</span></p></div></article>}
             </div>
             {error && <p className="error" role="alert">{error}</p>}
