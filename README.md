@@ -18,7 +18,9 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173). This starts the Vite client and the loopback API together. Leave **Demo fixture** selected, then send a message. Demo mode returns one static, clearly labelled `WL-1026` JSON draft. It does not classify new tickets, call an agent, or contact a customer.
 
-## Connect local Claude Code
+## Connect local Claude Code — experimental
+
+**Known limitation:** the authenticated smoke on 16 September 2026 still returned HTTP 502 (`Claude agent run did not complete`). Foreground specialist execution was observed in an earlier diagnostic, but the complete live endpoint is not yet verified. Use **Demo fixture** for the workshop frontend; keep the participant lab as the core Claude Code exercise.
 
 Live mode is server-only. The browser sends the synthetic ticket and your question to the loopback server; the server calls `query()` from the Claude Agent SDK using the user's existing local Claude Code authentication. No API key is read by the browser or committed here.
 

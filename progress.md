@@ -11,6 +11,6 @@
 
 ## Open
 
-- `OPEN` — the final schema-constrained output repair still needs one authenticated live smoke and human wording review.
+- `BLOCKED` — authenticated HTTP smoke on source `001cb4a` returned 502 (`Claude agent run did not complete`). Exact foreground specialist execution passed an earlier diagnostic, but end-to-end live connector acceptance has not passed. Demo mode remains the supported workshop path.
 - `OPEN` — no public backend or deployment is part of this starter.
-- `OPEN` — parent review must inspect the rendered UI and live agent trace before publication.
+- `PASS` — parent inspected the desktop demo screenshot and real runtime evidence. Publication is demo-ready only; live completion and human wording acceptance remain open.
