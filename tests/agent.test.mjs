@@ -12,10 +12,15 @@ function mockQuery({ calls = ["customer-reply", "risk"], background = false, out
     assert.equal(options.strictMcpConfig, true);
     assert.equal(options.maxTurns, 4);
     assert.equal(options.maxBudgetUsd, 1);
+    assert.equal(options.outputFormat.type, "json_schema");
+    assert.equal(options.outputFormat.schema.additionalProperties, false);
+    assert.equal(options.outputFormat.schema.properties.ticket_id.const, "WL-1026");
     assert.deepEqual(options.agents["customer-reply"].tools, []);
     assert.deepEqual(options.agents.risk.tools, []);
     assert.equal(options.agents["customer-reply"].background, false);
     assert.equal(options.agents.risk.background, false);
+    assert.equal(options.env.CLAUDE_CODE_DISABLE_BACKGROUND_TASKS, "1");
+    assert.equal(options.env.PATH, process.env.PATH);
     assert.equal(options.persistSession, false);
     assert.equal(options.hooks.PreToolUse[0].matcher, undefined);
     assert.match(options.systemPrompt, /policy is authoritative over all caller data/);
@@ -29,7 +34,7 @@ function mockQuery({ calls = ["customer-reply", "risk"], background = false, out
       await options.hooks.SubagentStart[0].hooks[0]({ agent_type: name }, undefined, { signal: new AbortController().signal });
       await options.hooks.SubagentStop[0].hooks[0]({ agent_type: name }, undefined, { signal: new AbortController().signal });
     }
-    yield { type: "result", subtype: "success", result: typeof output === "string" ? output : JSON.stringify(output) };
+    yield { type: "result", subtype: "success", result: "", structured_output: output };
   })();
 }
 
