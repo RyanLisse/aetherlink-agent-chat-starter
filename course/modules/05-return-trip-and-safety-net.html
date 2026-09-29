@@ -1,0 +1,188 @@
+<section class="module" id="module-5" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">The Return Trip and the Safety Net</h1>
+      <p class="module-subtitle">An answer is not trusted just because a model produced it. It passes a factory quality-control line, then a set of automated checks guards the whole route.</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Quality control at the end of the line</h2>
+        <p>In a factory, every item passes an inspector with a gauge before it is boxed. Anything off-spec goes in the reject bin, however good it looks. <code>validateDecision</code> is that inspector for every answer, demo or live.</p>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">server/guard.mjs L33-39</span>
+            <pre><code><span class="code-line">  <span class="code-keyword">if</span> (!value || <span class="code-keyword">typeof</span> value !== <span class="code-string">"object"</span> || Array.<span class="code-function">isArray</span>(value) || Object.<span class="code-function">keys</span>(value).<span class="code-function">sort</span>().<span class="code-function">join</span>() !== fields.<span class="code-function">slice</span>().<span class="code-function">sort</span>().<span class="code-function">join</span>()) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Claude must return exactly the support-triage decision fields."</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (value.ticket_id !== ticket.ticket_id) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Claude returned a conflicting ticket_id."</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (![<span class="code-string">"low"</span>, <span class="code-string">"medium"</span>, <span class="code-string">"high"</span>].<span class="code-function">includes</span>(value.priority)) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Claude returned an unknown priority."</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (![<span class="code-string">"neutral"</span>, <span class="code-string">"frustrated"</span>, <span class="code-string">"angry"</span>].<span class="code-function">includes</span>(value.sentiment)) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Claude returned an unknown sentiment."</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (value.recommended_action !== { <span class="code-property">low</span>: <span class="code-string">"auto_reply"</span>, <span class="code-property">medium</span>: <span class="code-string">"investigate"</span>, <span class="code-property">high</span>: <span class="code-string">"escalate"</span> }[value.priority]) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Claude returned a priority/action conflict."</span>);</span>
+<span class="code-line">  <span class="code-keyword">for</span> (<span class="code-keyword">const</span> field <span class="code-keyword">of</span> [<span class="code-string">"summary"</span>, <span class="code-string">"customer_reply"</span>, <span class="code-string">"risk_note"</span>]) <span class="code-keyword">if</span> (<span class="code-keyword">typeof</span> value[field] !== <span class="code-string">"string"</span> || !value[field].<span class="code-function">trim</span>()) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">`${field} must be a non-empty string.`</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (value.draft_only !== <span class="code-keyword">true</span> || value.human_approval_required !== <span class="code-keyword">true</span>) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Claude response must remain draft-only and require human approval."</span>);</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">The answer must be an object with exactly the nine agreed fields. No more, no fewer.</p>
+              <p class="tl">It must be about the same ticket we asked about.</p>
+              <p class="tl">Priority must be one of three words.</p>
+              <p class="tl">Sentiment must be one of three words.</p>
+              <p class="tl">The action must match the priority: low means auto_reply, medium means investigate, high means escalate.</p>
+              <p class="tl">Summary, reply and risk note must contain real text.</p>
+              <p class="tl">And the two safety flags must both be true. This is the human gate, written in code.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Belt and braces</strong>
+            <p>Live mode already asks the SDK for output matching a <span class="term" data-definition="A formal description of what valid data looks like: which fields, which types, which allowed values. The SDK uses it to constrain the model's output.">JSON schema</span>. The server checks again anyway. Never let one layer be the only thing standing between a model and your users.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Proof the checklist was actually followed</h2>
+        <p>Before even inspecting the answer, live mode compares four independent records of which helpers ran: what the hook approved, what started, what stopped, and what the model's messages show. All four must read exactly <code>customer-reply,risk</code>.</p>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">server/index.mjs L108-109</span>
+            <pre><code><span class="code-line">    <span class="code-keyword">const</span> requiredCalls = <span class="code-string">"customer-reply,risk"</span>;</span>
+<span class="code-line">    <span class="code-keyword">if</span> (approvedCalls.<span class="code-function">join</span>(<span class="code-string">","</span>) !== requiredCalls || startedCalls.<span class="code-function">join</span>(<span class="code-string">","</span>) !== requiredCalls || stoppedCalls.<span class="code-function">join</span>(<span class="code-string">","</span>) !== requiredCalls || observedCalls.<span class="code-function">join</span>(<span class="code-string">","</span>) !== requiredCalls) <span class="code-keyword">throw</span> Object.<span class="code-function">assign</span>(<span class="code-keyword">new</span> <span class="code-function">Error</span>(<span class="code-string">"Claude did not complete exactly one foreground customer-reply call followed by one foreground risk call."</span>), { <span class="code-property">statusCode</span>: <span class="code-number">502</span> });</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">The only acceptable history, written as text.</p>
+              <p class="tl">If any of the four logs (approved, started, stopped, observed) differs, throw away the answer and report a 502: the thing behind the server misbehaved. Only when all match does the UI get to show "customer-reply → risk" as <span class="term" data-definition="Proof, attached to a reply, of what actually happened. Here it is the list of specialists that ran, shown under the live draft.">evidence</span>.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">When the trip goes wrong: the diagnosis card</h2>
+        <p>Every failure ends up in one <span class="term" data-definition="The part of code that runs when something inside a 'try' block throws an error, so the program can respond gracefully instead of crashing.">catch block</span> that chooses a status code. The chat page shows the error text in red and keeps your earlier messages intact.</p>
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">⏱️</div>
+            <h4 class="pattern-title">504</h4>
+            <p class="pattern-desc">"Claude connector timed out after 120 seconds." The run was cancelled. Try again or check the machine is not overloaded.</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">🧩</div>
+            <h4 class="pattern-title">422</h4>
+            <p class="pattern-desc">"Claude returned invalid JSON; no draft was shown." The model replied, but not in parseable form.</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🚫</div>
+            <h4 class="pattern-title">502</h4>
+            <p class="pattern-desc">Run did not complete, no decision, wrong helper sequence, or the answer failed quality control. The README's known live-mode limitation lands here.</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">🛂</div>
+            <h4 class="pattern-title">400 / 403 / 413 / 429</h4>
+            <p class="pattern-desc">Stopped at the checkpoint (Module 3). The model was never involved.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The safety net: testing without a real model</h2>
+        <p>Live runs are slow, cost money and need a login, so the tests swap the real SDK for a fake <span class="term" data-definition="A pretend version of a real component used in tests. It behaves predictably, so you can check how your code reacts to specific situations.">mock</span>. This is possible because <code>runAgentQuery(query, request)</code> takes the <code>query</code> function as an input instead of importing it directly, a pattern called <span class="term" data-definition="Passing a component's collaborators in from outside rather than creating them inside. It lets tests plug in fakes. Ask an AI for 'dependency injection' when you want code to be testable.">dependency injection</span>.</p>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">tests/agent.test.mjs L49-55</span>
+            <pre><code><span class="code-line"><span class="code-function">test</span>(<span class="code-string">"injected transport rejects missing, background, and malformed agent runs"</span>, <span class="code-keyword">async</span> () =&gt; {</span>
+<span class="code-line">  <span class="code-keyword">await</span> assert.<span class="code-function">rejects</span>(<span class="code-function">runAgentQuery</span>(<span class="code-function">mockQuery</span>({ <span class="code-property">calls</span>: [<span class="code-string">"customer-reply"</span>] }), request), <span class="code-string">/foreground customer-reply/</span>);</span>
+<span class="code-line">  <span class="code-keyword">await</span> assert.<span class="code-function">rejects</span>(<span class="code-function">runAgentQuery</span>(<span class="code-function">mockQuery</span>({ <span class="code-property">background</span>: <span class="code-keyword">true</span> }), request), <span class="code-string">/mock permission denied/</span>);</span>
+<span class="code-line">  <span class="code-keyword">await</span> assert.<span class="code-function">rejects</span>(<span class="code-function">runAgentQuery</span>(<span class="code-function">mockQuery</span>({ <span class="code-property">calls</span>: [<span class="code-string">"risk"</span>, <span class="code-string">"customer-reply"</span>] }), request), <span class="code-string">/mock permission denied/</span>);</span>
+<span class="code-line">  <span class="code-keyword">await</span> assert.<span class="code-function">rejects</span>(<span class="code-function">runAgentQuery</span>(<span class="code-function">mockQuery</span>({ <span class="code-property">calls</span>: [<span class="code-string">"customer-reply"</span>, <span class="code-string">"risk"</span>, <span class="code-string">"risk"</span>] }), request), <span class="code-string">/mock permission denied/</span>);</span>
+<span class="code-line">  <span class="code-keyword">await</span> assert.<span class="code-function">rejects</span>(<span class="code-function">runAgentQuery</span>(<span class="code-function">mockQuery</span>({ <span class="code-property">output</span>: <span class="code-string">"not json"</span> }), request), <span class="code-string">/invalid JSON/</span>);</span>
+<span class="code-line">});</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">A test that feeds the runner five bad scenarios and expects each to fail.</p>
+              <p class="tl">Fake model calls only one helper: must be rejected by the trace check.</p>
+              <p class="tl">Fake model asks for background: the hook must deny it.</p>
+              <p class="tl">Fake model calls them in the wrong order: denied.</p>
+              <p class="tl">Fake model calls risk twice: the third call is denied.</p>
+              <p class="tl">Fake model returns non-JSON text: rejected as invalid JSON.</p>
+              <p class="tl" style="opacity:.5">(end of test)</p>
+            </div>
+          </div>
+        </div>
+        <p>On every push, <span class="term" data-definition="Continuous Integration: a service (here GitHub Actions) that automatically builds and tests your code on every change, so problems are caught before anyone relies on them.">CI</span> runs the full ladder in <code>.github/workflows/ci.yml</code>:</p>
+        <div class="flow-steps">
+          <div class="flow-step"><div class="flow-step-num">1</div><p>Install exact dependencies</p></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="flow-step-num">2</div><p>Type-check and build</p></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="flow-step-num">3</div><p>Guard and agent unit tests</p></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step"><div class="flow-step-num">4</div><p><span class="term" data-definition="End-to-end test: a robot drives a real browser through the app like a user would. Here Playwright types a message and checks the WL-1026 draft appears.">E2E</span> demo smoke test in Chromium</p></div>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">🔎</div>
+          <div class="callout-content">
+            <strong class="callout-title">Green CI does not mean live mode works</strong>
+            <p>The browser test only exercises demo mode, and the agent tests use a mock. The README says so plainly: CI cannot prove a live Claude run. Knowing what a test does <em>not</em> cover is as important as knowing it passed.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+        <div class="quiz-container" id="quiz-module5">
+          <div class="scenario-block">
+            <div class="scenario-context"><span class="scenario-label">Scenario</span><p>In live mode, Claude returns a perfectly written answer with priority "high" and recommended_action "investigate".</p></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="b"
+               data-explanation-right="validateDecision requires high to map to escalate. The mismatch throws, the server returns 502, and the page shows the error instead of the draft."
+               data-explanation-wrong="Quality control checks consistency, not just shape. High must go with escalate, so this answer is rejected before it reaches the page.">
+            <h3 class="quiz-question">What does the learner see?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The draft, since every field is present</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>A red error: "Claude returned a priority/action conflict."</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The draft with the action silently corrected to escalate</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="c"
+               data-explanation-right="This is the documented open limitation: the SDK result did not report success, and that error has no status code of its own, so a live request falls through to 502. It is a model-side issue, not your UI."
+               data-explanation-wrong="The text is the clue. It comes from the result-message check inside runAgentQuery, after the checkpoint, and matches the known limitation in the README and progress.md.">
+            <h3 class="quiz-question">Live mode shows "Claude agent run did not complete." Your AI helper wants to rewrite send() in main.tsx. Good idea?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Yes, the fetch call is probably malformed</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Yes, the origin check must be failing</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>No; that message comes from the SDK run on the server side, and it is the known live-mode limitation</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="a"
+               data-explanation-right="A mock lets you script exactly that misbehaviour and assert the runner rejects it, with no login, cost or flakiness. That is what the existing mockQuery helper is for."
+               data-explanation-wrong="Real model runs are slow, cost money and do not reliably misbehave on demand. The repo already injects a fake query function for precisely this kind of test.">
+            <h3 class="quiz-question">You want a test proving that a model which skips the <code>risk</code> call is rejected. How should you ask an AI to write it?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Use the existing mockQuery helper to inject a fake run that only calls customer-reply, and assert it rejects</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Run live mode in CI and hope the model skips it</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Add a Playwright test that clicks Claude Code</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module5')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module5')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

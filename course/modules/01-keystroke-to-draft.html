@@ -1,0 +1,190 @@
+<section class="module" id="module-1" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">From Keystroke to Draft</h1>
+      <p class="module-subtitle">You type a question and press Enter. A few moments later a draft appears. Here is every hand that message passes through.</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">What this app actually is</h2>
+        <p>AetherLink is a small practice chat for a support-desk workshop. There is exactly one fake customer complaint on screen, and you ask an AI "coordinator" to prepare a reply for a human to check. It never sends anything to anyone.</p>
+        <div class="icon-rows">
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-1)">🎫</div>
+            <div>
+              <strong>One made-up ticket: WL-1026</strong>
+              <p>Maarten says he was charged twice and wants it fixed today. That is the only ticket the app will ever accept.</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-2)">🔀</div>
+            <div>
+              <strong>Two modes: Demo fixture and Claude Code</strong>
+              <p>Demo returns the same canned answer every time. Claude Code asks a real AI model running on your own machine (still marked experimental).</p>
+            </div>
+          </div>
+          <div class="icon-row">
+            <div class="icon-circle" style="background: var(--color-actor-5)">✋</div>
+            <div>
+              <strong>A human gate on every answer</strong>
+              <p>Every reply is labelled a draft that a person must approve. The code refuses to show anything that says otherwise.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The moment you press Enter</h2>
+        <p>Think of the message as a baton in a relay race. The first runner is the chat page in your <span class="term" data-definition="The program you use to view websites, like Chrome or Safari. Here it runs the chat screen you type into.">browser</span>. Its only job is to package your words and hand them to the next runner, the <span class="term" data-definition="A program that waits for requests and answers them. Here it is a small Node.js program on your own computer, listening at 127.0.0.1:8787.">server</span>.</p>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">src/main.tsx</span>
+            <pre><code><span class="code-line">      <span class="code-keyword">const</span> response = <span class="code-keyword">await</span> <span class="code-function">fetch</span>(<span class="code-string">"/api/chat"</span>, {</span>
+<span class="code-line">        <span class="code-property">method</span>: <span class="code-string">"POST"</span>,</span>
+<span class="code-line">        <span class="code-property">headers</span>: { <span class="code-string">"content-type"</span>: <span class="code-string">"application/json"</span> },</span>
+<span class="code-line">        <span class="code-property">body</span>: <span class="code-function">JSON</span>.<span class="code-function">stringify</span>({ mode, message, ticket }),</span>
+<span class="code-line">      });</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Send a request to the address <code>/api/chat</code> and wait (<em>await</em>) until the server answers.</p>
+              <p class="tl">Use <span class="term" data-definition="An HTTP method meaning 'here is some data for you to process'. The other common one, GET, means 'please give me something'.">POST</span>, because we are handing over data, not just asking to read a page.</p>
+              <p class="tl">Put a label on the package saying the contents are <span class="term" data-definition="JavaScript Object Notation: a plain-text format for structured data, using curly braces and key/value pairs like {&quot;mode&quot;: &quot;demo&quot;}. Almost every web API speaks it.">JSON</span>.</p>
+              <p class="tl">The package holds three things: which mode you picked, what you typed, and the whole WL-1026 ticket.</p>
+              <p class="tl">Done packing; off it goes.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">The browser never talks to the AI</strong>
+            <p>Notice the address is <code>/api/chat</code> on your own machine, not an AI company's website. Keeping the model call on the server means no password or <span class="term" data-definition="A secret string that proves who you are to an online service. Anyone who sees it can spend your money, so it must never be shipped to a browser.">API key</span> ever reaches the page, where anyone could read it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The whole relay, step by step</h2>
+        <p>Click through the full round trip. The baton goes out through a checkpoint, reaches whatever produces the answer, gets inspected again, and comes home.</p>
+        <div class="flow-animation" data-steps='[
+          {"highlight":"flow-actor-1","label":"You type Prepare the draft route and press Enter. The chat page adds your bubble and shows Reading the bounded brief..."},
+          {"highlight":"flow-actor-2","label":"fetch sends a POST to /api/chat. In development the Vite dev server forwards anything under /api to port 8787.","packet":true,"from":"actor-1","to":"actor-2"},
+          {"highlight":"flow-actor-3","label":"The Node server receives it, checks the Origin header, refuses if another request is already running, then reads the body (max 32,000 bytes).","packet":true,"from":"actor-2","to":"actor-3"},
+          {"highlight":"flow-actor-4","label":"guard.mjs inspects the package: mode must be demo or live, message non-empty and under 4,000 characters, ticket must be exactly WL-1026.","packet":true,"from":"actor-3","to":"actor-4"},
+          {"highlight":"flow-actor-5","label":"Demo: a fixed JSON draft is built. Live: the Claude Agent SDK coordinator calls customer-reply then risk, under a strict hook.","packet":true,"from":"actor-4","to":"actor-5"},
+          {"highlight":"flow-actor-4","label":"Whatever came back is checked again by validateDecision: exact fields, matching ticket id, priority matches action, draft_only and human_approval_required are true.","packet":true,"from":"actor-5","to":"actor-4"},
+          {"highlight":"flow-actor-3","label":"The server replies with status 200 and a JSON body holding mode, text, and (live only) evidence of which specialists ran.","packet":true,"from":"actor-4","to":"actor-3"},
+          {"highlight":"flow-actor-1","label":"The chat page sees text starting with a curly brace, so it shows it as a formatted JSON block labelled Coordinator DEMO or LOCAL.","packet":true,"from":"actor-3","to":"actor-1"}
+        ]'>
+          <div class="flow-actors">
+            <div class="flow-actor" id="flow-actor-1">
+              <div class="flow-actor-icon">💬</div>
+              <span>Chat page<br><small>src/main.tsx</small></span>
+            </div>
+            <div class="flow-actor" id="flow-actor-2">
+              <div class="flow-actor-icon">↪️</div>
+              <span>Vite proxy<br><small>vite.config.ts</small></span>
+            </div>
+            <div class="flow-actor" id="flow-actor-3">
+              <div class="flow-actor-icon">🖥️</div>
+              <span>Server<br><small>server/index.mjs</small></span>
+            </div>
+            <div class="flow-actor" id="flow-actor-4">
+              <div class="flow-actor-icon">🛂</div>
+              <span>Guard<br><small>server/guard.mjs</small></span>
+            </div>
+            <div class="flow-actor" id="flow-actor-5">
+              <div class="flow-actor-icon">🧠</div>
+              <span>Answer source<br><small>demo fixture / Claude</small></span>
+            </div>
+          </div>
+          <div class="flow-packet" id="flow-packet"></div>
+          <div class="flow-step-label" id="flow-label">Click "Next Step" to begin</div>
+          <div class="flow-controls">
+            <button class="btn flow-next-btn">Next Step</button>
+            <button class="btn flow-reset-btn">Restart</button>
+            <span class="flow-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The three-line heart of the server</h2>
+        <p>When the baton arrives, the server's <span class="term" data-definition="A specific address on a server that does one job, like /api/chat. You 'hit' an endpoint by sending a request to it.">endpoint</span> handler does the whole middle of the relay in three lines. Everything else in <code>server/index.mjs</code> supports these.</p>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">server/index.mjs</span>
+            <pre><code><span class="code-line">      payload = <span class="code-function">validateChatRequest</span>(<span class="code-keyword">await</span> <span class="code-function">readBody</span>(request));</span>
+<span class="code-line">      <span class="code-keyword">const</span> result = payload.mode === <span class="code-string">"demo"</span> ? { <span class="code-property">text</span>: <span class="code-function">JSON</span>.<span class="code-function">stringify</span>(<span class="code-function">validateDecision</span>(<span class="code-function">JSON</span>.<span class="code-function">parse</span>(<span class="code-function">demoReply</span>(payload)), payload.ticket), <span class="code-keyword">null</span>, <span class="code-number">2</span>) } : <span class="code-keyword">await</span> <span class="code-function">liveReply</span>(payload);</span>
+<span class="code-line">      <span class="code-function">sendJson</span>(response, <span class="code-number">200</span>, { <span class="code-property">mode</span>: payload.mode, ...result });</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Read the incoming package, then hand it to the guard. If the guard objects, we jump straight to the error path and nothing else runs.</p>
+              <p class="tl">Fork in the road: in demo mode, build the canned draft and run it through the same answer-checker the real model faces. In live mode, go ask Claude (and wait).</p>
+              <p class="tl">Reply with status 200 ("all good") plus the mode and the checked result.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-info">
+          <div class="callout-icon">🔎</div>
+          <div class="callout-content">
+            <strong class="callout-title">Even the fake answer gets checked</strong>
+            <p>The demo draft is hard-coded, yet it still passes through <code>validateDecision</code>. That keeps both paths honest: if someone edits the canned text into something unsafe, the demo breaks loudly instead of quietly teaching bad habits.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+        <div class="quiz-container" id="quiz-module1">
+          <div class="quiz-question-block"
+               data-correct="b"
+               data-explanation-right="The browser only ever talks to /api/chat on your own machine. Putting a model key in the page would expose it to anyone who opens developer tools."
+               data-explanation-wrong="In this app the browser never contacts Claude directly; it sends everything to the local server, which owns all model access. Moving that into the browser would leak credentials.">
+            <h3 class="quiz-question">An AI assistant suggests: "Speed things up by calling Claude straight from main.tsx." What is the real cost?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>None; the server is just an extra hop</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Credentials and the model boundary would move into the page, where anyone can see and change them</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The chat bubbles would stop rendering</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="c"
+               data-explanation-right="The body sent by fetch includes the ticket object from main.tsx. If that object no longer matches the guard's copy exactly, validateChatRequest rejects it before any answer is produced."
+               data-explanation-wrong="Think about what fetch actually packs into the body: mode, message, and ticket. The guard compares that ticket to its own frozen copy, so a mismatch fails at the checkpoint, not later.">
+            <h3 class="quiz-question">You edit the ticket text in main.tsx only. Every message now fails with an error. Where in the relay did it most likely drop?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>In the Vite proxy</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>When the page renders the JSON block</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>At the guard, which only accepts the exact WL-1026 ticket</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="a"
+               data-explanation-right="Demo mode never loads the Agent SDK, so it works without any login. That is why the README calls it the supported workshop path."
+               data-explanation-wrong="Look at the fork: demo builds a fixed answer with demoReply and never calls liveReply, so no Claude login is involved at all.">
+            <h3 class="quiz-question">A learner has no Claude Code login. Which path still produces a draft?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Demo fixture, because it never calls the model</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Claude Code, because it falls back to demo automatically</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Neither; the server refuses to start</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module1')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module1')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

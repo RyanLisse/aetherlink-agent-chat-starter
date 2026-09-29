@@ -1,0 +1,191 @@
+<section class="module" id="module-2" style="background: var(--color-bg-warm)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">Meet the Cast</h1>
+      <p class="module-subtitle">A film set runs on a call sheet: every crew member has one job and knows who they report to. This repo works the same way.</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The call sheet (who lives where)</h2>
+        <p>On a film set, the camera operator never touches the lighting rig. Knowing who owns which job lets you tell an AI "change this in the guard, not the page," and get a precise edit instead of a sprawling one.</p>
+        <div class="file-tree">
+          <div class="ft-folder open">
+            <span class="ft-name">src/</span>
+            <span class="ft-desc">The front of house: what you see in the browser</span>
+            <div class="ft-children">
+              <div class="ft-file"><span class="ft-name">main.tsx</span><span class="ft-desc">The whole chat page: mode switch, message list, composer, ticket panel, and the send() function</span></div>
+              <div class="ft-file"><span class="ft-name">styles.css</span><span class="ft-desc">The look: colours, layout, bubbles</span></div>
+            </div>
+          </div>
+          <div class="ft-folder open">
+            <span class="ft-name">server/</span>
+            <span class="ft-desc">Backstage: runs on your machine, never in the browser</span>
+            <div class="ft-children">
+              <div class="ft-file"><span class="ft-name">index.mjs</span><span class="ft-desc">The server: routes requests, builds the demo answer, runs the live Claude coordinator</span></div>
+              <div class="ft-file"><span class="ft-name">guard.mjs</span><span class="ft-desc">The rules: what may come in and what may go out</span></div>
+            </div>
+          </div>
+          <div class="ft-folder"><span class="ft-name">scripts/dev.mjs</span><span class="ft-desc">Starts the server and the Vite dev server together</span></div>
+          <div class="ft-folder"><span class="ft-name">tests/</span><span class="ft-desc">Fast checks of the guard and the agent runner (no real AI needed)</span></div>
+          <div class="ft-folder"><span class="ft-name">e2e/</span><span class="ft-desc">A robot browser that clicks through the demo like a real user</span></div>
+          <div class="ft-folder"><span class="ft-name">.github/workflows/ci.yml</span><span class="ft-desc">Runs build, tests, and the robot browser on every push</span></div>
+          <div class="ft-folder"><span class="ft-name">.claude/agents/</span><span class="ft-desc">Reference notes for the two specialists. Live mode does not load these.</span></div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">The cast in character</h2>
+        <div class="pattern-cards">
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-1)">
+            <div class="pattern-icon" style="background: var(--color-actor-1)">💬</div>
+            <h4 class="pattern-title">Chat page</h4>
+            <p class="pattern-desc">A <span class="term" data-definition="A popular JavaScript library for building user interfaces out of reusable pieces called components. When data changes, React redraws the affected parts of the screen.">React</span> app. Holds the conversation in memory and shows it. Knows nothing about AI.</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-2)">
+            <div class="pattern-icon" style="background: var(--color-actor-2)">↪️</div>
+            <h4 class="pattern-title">Vite</h4>
+            <p class="pattern-desc">A <span class="term" data-definition="A tool that serves your front-end code while you develop and bundles it into small files for production. It reloads the page instantly when you save.">dev server</span> on port 5173 that forwards <code>/api</code> calls to the real server.</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-3)">
+            <div class="pattern-icon" style="background: var(--color-actor-3)">🖥️</div>
+            <h4 class="pattern-title">Server</h4>
+            <p class="pattern-desc">Plain <span class="term" data-definition="A program that runs JavaScript outside a browser, on your computer or a server. This repo needs version 22 or newer.">Node.js</span> on port 8787. One route, one request at a time.</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-4)">
+            <div class="pattern-icon" style="background: var(--color-actor-4)">🛂</div>
+            <h4 class="pattern-title">Guard</h4>
+            <p class="pattern-desc">Pure rules, no network. Checks the request going in and the decision coming out.</p>
+          </div>
+          <div class="pattern-card" style="border-top: 3px solid var(--color-actor-5)">
+            <div class="pattern-icon" style="background: var(--color-actor-5)">🧠</div>
+            <h4 class="pattern-title">Coordinator + two specialists</h4>
+            <p class="pattern-desc">Live only. Claude, via the <span class="term" data-definition="Software Development Kit: a ready-made library that lets your code use someone else's service. The Claude Agent SDK lets a program run Claude Code as an agent.">SDK</span>, delegates to <code>customer-reply</code> then <code>risk</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Overheard on set: one demo message</h2>
+        <p>Here is the demo round trip as a group chat between the crew. Press Next Message to play it.</p>
+        <div class="chat-window" id="chat-cast">
+          <div class="chat-messages">
+            <div class="chat-message" data-msg="0" data-sender="page" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">P</div>
+              <div class="chat-bubble"><span class="chat-sender" style="color: var(--color-actor-1)">Chat page</span><p>User typed "Prepare the draft route". Mode is demo. Packing mode, message and the WL-1026 ticket into JSON and POSTing to /api/chat.</p></div>
+            </div>
+            <div class="chat-message" data-msg="1" data-sender="vite" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-2)">V</div>
+              <div class="chat-bubble"><span class="chat-sender" style="color: var(--color-actor-2)">Vite</span><p>Not mine, anything under /api goes to 127.0.0.1:8787. Forwarding.</p></div>
+            </div>
+            <div class="chat-message" data-msg="2" data-sender="server" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">S</div>
+              <div class="chat-bubble"><span class="chat-sender" style="color: var(--color-actor-3)">Server</span><p>Origin is localhost, fine. Nobody else is in flight, so I am marking myself busy. Body is under 32 KB. Guard, your turn.</p></div>
+            </div>
+            <div class="chat-message" data-msg="3" data-sender="guard" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">G</div>
+              <div class="chat-bubble"><span class="chat-sender" style="color: var(--color-actor-4)">Guard</span><p>Mode "demo" is allowed. Message is non-empty. Ticket has exactly customer, message, ticket_id and they match my frozen copy. Approved.</p></div>
+            </div>
+            <div class="chat-message" data-msg="4" data-sender="server" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-3)">S</div>
+              <div class="chat-bubble"><span class="chat-sender" style="color: var(--color-actor-3)">Server</span><p>Demo mode, so no Claude today. Built the fixed draft: high priority, escalate, draft_only true. Guard, check my homework too?</p></div>
+            </div>
+            <div class="chat-message" data-msg="5" data-sender="guard" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-4)">G</div>
+              <div class="chat-bubble"><span class="chat-sender" style="color: var(--color-actor-4)">Guard</span><p>Nine fields exactly, ticket id matches, high maps to escalate, human approval still required. Ship it.</p></div>
+            </div>
+            <div class="chat-message" data-msg="6" data-sender="page" style="display:none">
+              <div class="chat-avatar" style="background: var(--color-actor-1)">P</div>
+              <div class="chat-bubble"><span class="chat-sender" style="color: var(--color-actor-1)">Chat page</span><p>Got a 200. Text starts with "{", so I will show it as a JSON block labelled Coordinator · DEMO. Clearing the thinking bubble.</p></div>
+            </div>
+          </div>
+          <div class="chat-typing" id="chat-cast-typing" style="display:none">
+            <div class="chat-avatar" id="chat-cast-typing-avatar">?</div>
+            <div class="chat-typing-dots"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+          </div>
+          <div class="chat-controls">
+            <button class="btn chat-next-btn">Next Message</button>
+            <button class="btn chat-all-btn">Play All</button>
+            <button class="btn chat-reset-btn">Replay</button>
+            <span class="chat-progress"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">How two programs start as one</h2>
+        <p>During development you run a single command, yet two programs start. <code>scripts/dev.mjs</code> is the stage manager who calls both actors onto set, and <code>vite.config.ts</code> tells Vite where to send API traffic.</p>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">scripts/dev.mjs L3-4 · vite.config.ts L6</span>
+            <pre><code><span class="code-line"><span class="code-keyword">const</span> server = <span class="code-function">spawn</span>(process.execPath, [<span class="code-string">"--env-file-if-exists=.env"</span>, <span class="code-string">"server/index.mjs"</span>], { <span class="code-property">stdio</span>: <span class="code-string">"inherit"</span> });</span>
+<span class="code-line"><span class="code-keyword">const</span> vite = <span class="code-function">spawn</span>(<span class="code-string">"npx"</span>, [<span class="code-string">"vite"</span>], { <span class="code-property">stdio</span>: <span class="code-string">"inherit"</span>, <span class="code-property">shell</span>: <span class="code-keyword">true</span> });</span>
+<span class="code-line">  <span class="code-property">server</span>: { <span class="code-property">port</span>: <span class="code-number">5173</span>, <span class="code-property">strictPort</span>: <span class="code-keyword">true</span>, <span class="code-property">proxy</span>: { <span class="code-string">"/api"</span>: <span class="code-string">"http://127.0.0.1:8787"</span> } },</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Start the API server as a separate <span class="term" data-definition="A running program. One command can start several processes that run side by side, each with its own memory.">process</span>, loading settings from a <span class="term" data-definition="A file of KEY=value settings (like PORT=8787) kept out of git, so each machine can have its own values and secrets.">.env file</span> if one exists.</p>
+              <p class="tl">Also start Vite, sharing the same terminal output so you see both logs.</p>
+              <p class="tl">Last line is from vite.config.ts: serve the page on port 5173, and act as a <span class="term" data-definition="A middleman that forwards requests to another address. The browser thinks it is talking to 5173; the proxy quietly passes /api calls to 8787.">proxy</span>: forward every <code>/api</code> request to the server on 8787.</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Dev and production take different doors</strong>
+            <p>With <code>npm run dev</code>, you open port 5173 and Vite forwards to 8787. With <code>npm run build</code> + <code>npm start</code>, you open 8787 directly and the server hands out the built files from <code>dist/</code> itself. Same API, two front doors. If "the page loads but chat fails" in dev, suspect the proxy or a server that did not start.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+        <div class="quiz-container" id="quiz-module2">
+          <div class="quiz-question-block"
+               data-correct="b"
+               data-explanation-right="What the server accepts is a rule, and rules live in guard.mjs. Changing only the page would just make the guard reject every request."
+               data-explanation-wrong="The page can send whatever it likes; the guard decides what is accepted. The rule change belongs in guard.mjs, with the page and tests updated to match.">
+            <h3 class="quiz-question">The workshop wants to allow a second synthetic ticket, WL-1027. Which crew member owns the rule that decides whether it is accepted?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The chat page in main.tsx</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The guard in server/guard.mjs</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The Vite proxy config</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="a"
+               data-explanation-right="In dev, /api is forwarded by Vite to 8787. If the server process crashed or never started, the page loads but every chat request fails."
+               data-explanation-wrong="Consider which program serves the page (Vite on 5173) and which answers /api (the server on 8787). A page that loads but cannot chat points at the second one.">
+            <h3 class="quiz-question">In dev, the page at localhost:5173 loads fine, but every message shows a connector error. First suspect?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The server on 8787 is not running, so the proxy has nowhere to forward</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>styles.css failed to load</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The .claude/agents files are missing</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="c"
+               data-explanation-right="Live mode uses the inline agents map in server/index.mjs and loads no project settings, precisely so local files cannot widen what the specialists can do."
+               data-explanation-wrong="The README is explicit: the .claude/agents files are manual references. Live mode uses the inline definitions in server/index.mjs and settingSources: [], so edits to those files change nothing at runtime.">
+            <h3 class="quiz-question">Someone adds a Bash tool to .claude/agents/risk.md and expects live mode to use it. What happens?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The risk specialist can now run shell commands</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The server refuses to start</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Nothing changes in live mode; it ignores those files</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module2')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module2')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

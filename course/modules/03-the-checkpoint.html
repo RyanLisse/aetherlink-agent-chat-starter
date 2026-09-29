@@ -1,0 +1,162 @@
+<section class="module" id="module-3" style="background: var(--color-bg)">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">The Checkpoint</h1>
+      <p class="module-subtitle">Before anything reaches a model, the request walks through airport security. Four lanes, four ways to be turned back.</p>
+    </header>
+
+    <div class="module-body">
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Four security lanes</h2>
+        <p>Airport security does not care how nice your holiday plans are. It checks your boarding pass, your bag size, and what is inside, in that order. The server does the same, and each refusal has its own <span class="term" data-definition="A three-digit number the server sends back with every reply. 200 means success; 4xx means the request was wrong; 5xx means the server or something it depends on failed.">HTTP status code</span>.</p>
+        <div class="step-cards">
+          <div class="step-card"><div class="step-num">1</div><div class="step-body"><strong>Boarding pass: where are you from? (403)</strong><p>The browser's <span class="term" data-definition="A header the browser attaches saying which website sent the request, like http://localhost:5173. Servers use it to refuse requests from pages they do not trust.">Origin</span> must be localhost or 127.0.0.1. A random website cannot use your local agent.</p></div></div>
+          <div class="step-card"><div class="step-num">2</div><div class="step-body"><strong>One lane open (429)</strong><p>If another request is still running, you are told to wait. Only one live agent run at a time.</p></div></div>
+          <div class="step-card"><div class="step-num">3</div><div class="step-body"><strong>Bag size (413)</strong><p>The body is counted as it streams in; past 32,000 bytes the server stops reading.</p></div></div>
+          <div class="step-card"><div class="step-num">4</div><div class="step-body"><strong>Contents scan (400)</strong><p><code>validateChatRequest</code> checks mode, message and ticket. Anything unexpected is refused.</p></div></div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Lane 1: checking the boarding pass</h2>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">server/guard.mjs L9-17</span>
+            <pre><code><span class="code-line"><span class="code-keyword">export function</span> <span class="code-function">isAllowedOrigin</span>(origin = <span class="code-string">""</span>) {</span>
+<span class="code-line">  <span class="code-keyword">if</span> (!origin) <span class="code-keyword">return true</span>;</span>
+<span class="code-line">  <span class="code-keyword">try</span> {</span>
+<span class="code-line">    <span class="code-keyword">const</span> url = <span class="code-keyword">new</span> <span class="code-function">URL</span>(origin);</span>
+<span class="code-line">    <span class="code-keyword">return</span> [<span class="code-string">"localhost"</span>, <span class="code-string">"127.0.0.1"</span>].<span class="code-function">includes</span>(url.hostname) &amp;&amp; [<span class="code-string">"http:"</span>, <span class="code-string">"https:"</span>].<span class="code-function">includes</span>(url.protocol);</span>
+<span class="code-line">  } <span class="code-keyword">catch</span> {</span>
+<span class="code-line">    <span class="code-keyword">return false</span>;</span>
+<span class="code-line">  }</span>
+<span class="code-line">}</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">A yes/no <span class="term" data-definition="A named, reusable block of code that takes inputs and returns a result. 'export' means other files are allowed to use it.">function</span>: is this origin allowed?</p>
+              <p class="tl">No origin at all (a terminal tool like curl, or a same-page load) is let through.</p>
+              <p class="tl">Try the following, and if anything blows up, jump to the catch below.</p>
+              <p class="tl">Parse the origin text into a proper web address.</p>
+              <p class="tl">Allowed only if the host is your own machine and the scheme is http or https.</p>
+              <p class="tl">If the origin was garbage that could not be parsed...</p>
+              <p class="tl">...refuse it.</p>
+              <p class="tl" style="opacity:.5">(closing braces)</p>
+            </div>
+          </div>
+        </div>
+        <div class="callout callout-accent">
+          <div class="callout-icon">💡</div>
+          <div class="callout-content">
+            <strong class="callout-title">Why a local server still checks origins</strong>
+            <p>Any website you visit can make your browser send requests to <code>127.0.0.1</code>. Without this check, a malicious page could quietly drive your local agent. "It only runs on my laptop" is not the same as "only I can reach it."</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Lane 4: the contents scan</h2>
+        <p>This is the strictest lane. The ticket is compared to a <span class="term" data-definition="Object.freeze makes an object read-only: no code can add, change or remove its fields afterwards. Here it locks the one allowed ticket.">frozen</span> copy field by field, so even adding a harmless extra field is refused.</p>
+        <div class="translation-block animate-in">
+          <div class="translation-code">
+            <span class="translation-label">server/guard.mjs L19-29</span>
+            <pre><code><span class="code-line"><span class="code-keyword">export function</span> <span class="code-function">validateChatRequest</span>(value) {</span>
+<span class="code-line">  <span class="code-keyword">if</span> (!value || <span class="code-keyword">typeof</span> value !== <span class="code-string">"object"</span> || Array.<span class="code-function">isArray</span>(value)) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Request must be a JSON object."</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (value.mode !== <span class="code-string">"demo"</span> &amp;&amp; value.mode !== <span class="code-string">"live"</span>) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"mode must be demo or live."</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (<span class="code-keyword">typeof</span> value.message !== <span class="code-string">"string"</span> || !value.message.<span class="code-function">trim</span>()) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"message must be a non-empty string."</span>);</span>
+<span class="code-line">  <span class="code-keyword">if</span> (value.message.length &gt; MAX_MESSAGE_CHARS) <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">`message exceeds ${MAX_MESSAGE_CHARS} characters.`</span>);</span>
+<span class="code-line">  <span class="code-keyword">const</span> ticket = value.ticket;</span>
+<span class="code-line">  <span class="code-keyword">if</span> (!ticket || Object.<span class="code-function">keys</span>(ticket).<span class="code-function">sort</span>().<span class="code-function">join</span>() !== <span class="code-string">"customer,message,ticket_id"</span> || ticket.ticket_id !== SYNTHETIC_TICKET.ticket_id || ticket.customer !== SYNTHETIC_TICKET.customer || ticket.message !== SYNTHETIC_TICKET.message) {</span>
+<span class="code-line">    <span class="code-keyword">throw new</span> <span class="code-function">Error</span>(<span class="code-string">"Only the supplied synthetic WL-1026 ticket is accepted."</span>);</span>
+<span class="code-line">  }</span>
+<span class="code-line">  <span class="code-keyword">return</span> { <span class="code-property">mode</span>: value.mode, <span class="code-property">message</span>: value.message.<span class="code-function">trim</span>(), ticket };</span>
+<span class="code-line">}</span></code></pre>
+          </div>
+          <div class="translation-english">
+            <span class="translation-label">PLAIN ENGLISH</span>
+            <div class="translation-lines">
+              <p class="tl">Inspect whatever the browser sent.</p>
+              <p class="tl">It must be a JSON object (not empty, not a list). Otherwise <span class="term" data-definition="To throw an error is to stop the current work immediately and hand a problem report up to whoever called you. The server catches it and turns it into an error reply.">throw</span> an error.</p>
+              <p class="tl">Mode must be exactly "demo" or "live".</p>
+              <p class="tl">The message must be real text, not blank spaces.</p>
+              <p class="tl">And no longer than 4,000 characters.</p>
+              <p class="tl">Pull out the ticket.</p>
+              <p class="tl">It must have exactly three fields, and each must match the frozen WL-1026 copy word for word...</p>
+              <p class="tl">...or the request is refused with a clear reason.</p>
+              <p class="tl" style="opacity:.5">(end of check)</p>
+              <p class="tl">Passed: hand back a clean copy with the message's extra spaces trimmed off.</p>
+              <p class="tl" style="opacity:.5">(end of function)</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Reading the refusal slips</h2>
+        <p>When the chat shows a red error, the wording tells you which lane stopped it. These come straight from the code.</p>
+        <div class="badge-list">
+          <div class="badge-item"><code class="badge-code">403</code><span class="badge-desc">"Only loopback browser origins are allowed." The page was not served from your machine.</span></div>
+          <div class="badge-item"><code class="badge-code">429</code><span class="badge-desc">"One connector request at a time" Another request (usually a slow live run) is still going.</span></div>
+          <div class="badge-item"><code class="badge-code">413</code><span class="badge-desc">"Request body is too large." Over 32,000 bytes arrived.</span></div>
+          <div class="badge-item"><code class="badge-code">400</code><span class="badge-desc">Any guard message, in either mode, such as "Only the supplied synthetic WL-1026 ticket is accepted." or "Request body must be valid JSON."</span></div>
+          <div class="badge-item"><code class="badge-code">502</code><span class="badge-desc">Live mode only, <em>after</em> the checkpoint: the model run itself failed, e.g. "Claude agent run did not complete." (see Module 5).</span></div>
+        </div>
+        <div class="callout callout-warning">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-content">
+            <strong class="callout-title">400 or 502 tells you which side of the checkpoint failed</strong>
+            <p>When the guard throws, the server has not yet recorded the request's mode, so the status falls back to 400. A 502 only appears once a live request is past security and the model side fails. If an AI helper says "Claude is down" about a 400, it is reading the wrong clue.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen animate-in">
+        <h2 class="screen-heading">Check your understanding</h2>
+        <div class="quiz-container" id="quiz-module3">
+          <div class="quiz-question-block"
+               data-correct="c"
+               data-explanation-right="The guard compares the sorted list of keys to customer,message,ticket_id. An extra key like priority_hint changes that list, so the whole request is refused."
+               data-explanation-wrong="Look at the key check: Object.keys(ticket).sort().join() must equal exactly customer,message,ticket_id. Any additional field, however harmless, fails it.">
+            <h3 class="quiz-question">You add a <code>priority_hint</code> field to the ticket object in main.tsx to help the model. What happens?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The model receives the hint and uses it</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The guard silently strips the extra field</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Every request is rejected because the ticket no longer has exactly three fields</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="a"
+               data-explanation-right="The inFlight flag lets only one request through at a time. A second tab or a double submit while a live run is going gets a 429."
+               data-explanation-wrong="The clue is the wording: one connector request at a time. That is the inFlight flag in the server, not the guard or the model.">
+            <h3 class="quiz-question">During a long live run, a colleague sends a message from a second tab and gets "One connector request at a time". Is something broken?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>No, this is the single-lane rule working as designed</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Yes, the origin check is misconfigured</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Yes, Claude has hit its rate limit</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <div class="quiz-question-block"
+               data-correct="b"
+               data-explanation-right="The page on a remote host sends an Origin that is not localhost, so isAllowedOrigin returns false and the server answers 403 before reading anything."
+               data-explanation-wrong="Think about lane 1. A page served from a public host sends that host as its Origin, and the guard only trusts localhost and 127.0.0.1.">
+            <h3 class="quiz-question">You deploy only the built front end to a public website and point it at a friend's machine. What stops it?</h3>
+            <div class="quiz-options">
+              <button class="quiz-option" data-value="a" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The 32 KB body limit</span></button>
+              <button class="quiz-option" data-value="b" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>The origin check: a public page is not a loopback origin, so it gets 403</span></button>
+              <button class="quiz-option" data-value="c" onclick="selectOption(this)"><div class="quiz-option-radio"></div><span>Nothing; it works</span></button>
+            </div>
+            <div class="quiz-feedback"></div>
+          </div>
+          <button class="quiz-check-btn" onclick="checkQuiz('quiz-module3')">Check Answers</button>
+          <button class="quiz-reset-btn" onclick="resetQuiz('quiz-module3')">Try Again</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</section>

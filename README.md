@@ -57,6 +57,16 @@ npm run test:browser
 
 CI runs these checks with two browser workers. The browser smoke test covers loading the page, selecting the demo path, sending a message, and seeing the human-approval contract in the response. It cannot prove a live Claude run or human acceptance of wording.
 
+## Interactive course
+
+`course/` holds a self-contained, five-module walkthrough that traces one message from the browser through the server, the guard, and the demo or live model path and back again. It uses real snippets from this repo, with plain-English translations, animations, and short quizzes. No install or server is needed:
+
+```sh
+open course/index.html
+```
+
+After editing a file in `course/modules/`, run `bash build.sh` from `course/` to rebuild `index.html`.
+
 ## References
 
 - [AI Elements chatbot example](https://elements.ai-sdk.dev/examples/chatbot) — the conversation and prompt-input interaction pattern that inspired this compact surface.
